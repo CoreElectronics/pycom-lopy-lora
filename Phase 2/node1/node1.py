@@ -26,17 +26,30 @@ lora = LoRa(mode=LoRa.LORA, tx_iq=True, region=LoRa.AU915)
 sock = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 sock.setblocking(False)
 
+# Chris@Core: To solve the "waiting forever for acknowledgement" problem
+# I've moved the acknowledgement code into its own function.
 def acknowledge():
+
+    # Chris@Core: Create a timer. This allows us to know how much time
+    # goes by while we're waiting
     chrono = Timer.Chrono()
+
+    # Chris@Core: Set it to run.
     chrono.start()
-    waiting_ack = True
-    while(waiting_ack):
 
+    # Chris@Core: These two lines keep us repeatedly checking for an
+    # acknowledgement. The only way out of here is if we BREAK this loop
+    while(True):
+
+        # Chris@Core: So we know what's going on while we wait, print something
         print(".", end="")
-        if (chrono.read() > _LORA_ACKNOWLEDGEMENT_TIMEOUT):
-            print(" NO ACK") # No acknowledgement receivedself.
-            break
 
+        # Chris@Core: If time's up, print that we gave up.
+        if (chrono.read() > _LORA_ACKNOWLEDGEMENT_TIMEOUT):
+            print(" NO ACK")
+            break # Chris@Core: This stops the while(True) loop above
+
+        # Chris@Core: This code is as before.
         package = sock.recv(256)
         if (len(package) > 0):
             device_id, package_len, ack = struct.unpack(_LORA_PKG_ACK_FORMAT, package)
@@ -52,6 +65,9 @@ def acknowledge():
                     print("NACK") # Achnowledgement recieved, message NOT understood
             # else:
             #     print(' (Saw ACK for node{})'.format(device_id), end='')
+
+        # Chris@Core: Every time this loop repeats it prints ....
+        # So don't print thousands of them. 10 per second is heaps.
         time.sleep(0.1)
 
 # RGBLED
@@ -71,5 +87,5 @@ while(True):
     pkg = struct.pack(_LORA_PKG_FORMAT % len(msg), DEVICE_ID, len(msg), msg)
     sock.send(pkg)
     print('SENT "{}" '.format(msg), end='')
-    acknowledge()
+    acknowledge()   # Chris@Core: Call the new function to handle acknowledgement
     time.sleep(5)

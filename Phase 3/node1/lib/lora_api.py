@@ -35,6 +35,8 @@ class loraAPI:
     _LORA_ACKNOWLEDGEMENT_TIMEOUT = 3 # seconds
 
     def __init__(self, device_id=0, device_name='No-name', device_colour='white', device_colour_code=0xFFFFFF, is_gateway=False):
+        # Each newly created object holds onto these parameters (device_id, etc.)
+        # because it will need to use them later.
         self.device_id = device_id
         self.device_name = device_name
         self.device_colour = device_colour
@@ -51,10 +53,14 @@ class loraAPI:
         pycom.rgbled(self.device_colour_code)
         print("{} is {}".format(self.device_name, self.device_colour))
 
+        # I don't understand why this difference, but you can imaging
+        # the gateway is lisening for messages from any node and the
+        # nodes only want to send messages to the gateway.
         if self.is_gateway:
             self.lora = LoRa(mode=LoRa.LORA, rx_iq=True, region=loraAPI._LORA_REGION)
         else:
             self.lora = LoRa(mode=LoRa.LORA, tx_iq=True, region=loraAPI._LORA_REGION)
+
         self.sock = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
         self.sock.setblocking(False)
 
