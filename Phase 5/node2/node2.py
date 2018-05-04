@@ -46,23 +46,26 @@ while(True):
     # Send a message to the gateway asking for temperature and humidity
     node.send_as_json({"requests": ["temperature", "humidity"]})
 
-    # If the gateway is doing its job, it will reply
-    device_id, data = node.receive_json()
+    while(True):    # Keep checking for a LoRa package
 
-    # If either are "None" then code below doesn't run
-    if device_id and data:
+        # If the gateway is doing its job, it will reply
+        device_id, data = node.receive_json()
 
-        # Only act on what we receive if it's sent as a 'response' to our 'request'
-        # See node1.py for more info on how the below lines work
-        if "responses" in data:
-            response_data = data["responses"]
-            if "temperature" in response_data:
-                temperature = response_data['temperature']
-            if "humidity" in response_data:
-                humidity = response_data['humidity']
+        # If either are "None" then code below doesn't run
+        if device_id and data:
 
-        # Update the LCD screen
-        update()
+            # Only act on what we receive if it's sent as a 'response' to our 'request'
+            # See node1.py for more info on how the below lines work
+            if "responses" in data and "temperature" in data["responses"] and "humidity" in data["responses"]:
+                # Save new values
+                temperature = data["responses"]['temperature']
+                humidity = data["responses"]['humidity']
+                # Update the LCD screen
+                update()
+                break   # Exits the inside while(True) loop
+        else:
+            time.sleep(0.1)
 
     # Don't request again too soon. LoRa should be used infrequently.
     time.sleep(10)
+    
