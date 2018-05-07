@@ -1,6 +1,7 @@
 # Chris@Core: in getting rid of all the redundant code we had to make
 # a new file to keep it all together. Now the only thing our devices
 # need to import is the new loraAPI, that's in /lib/lora_api.py
+import time
 from lora_api import loraAPI
 
 # Chris@Core: Here's a couple of dummy data values we want to send
